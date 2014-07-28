@@ -1363,13 +1363,56 @@ window_completions (char* str UNUSED)
   return list;
 }
 
+/* Helper function for cmd_select(). */
+cmdret *
+cmd_select_string (char *str)
+{
+  int n;
+
+  if (strlen (str) == 1 && str[0] == '-')
+    {
+      blank_frame (current_frame());
+      return cmdret_new (RET_SUCCESS, NULL);
+    }
+  /* try by number */
+  if ((n = string_to_positive_int (str)) >= 0)
+    {
+      rp_window_elem *elem = group_find_window_by_number (rp_current_group, n);
+
+      if (elem)
+        {
+          goto_window (elem->win);
+          return cmdret_new (RET_SUCCESS, NULL);
+        }
+      else
+        {
+          /* show the window list as feedback */
+          show_bar (current_screen (), defaults.window_fmt);
+          return cmdret_new (RET_FAILURE,
+                            "select: unknown window number '%d'", n);
+        }
+    }
+
+  /* try by name */
+  rp_window *win = find_window_name (str, 1);
+  
+  if (!win)
+    win = find_window_name (str, 0);
+  
+  if (win)
+    {
+      goto_window (win);
+      return cmdret_new (RET_SUCCESS, NULL);
+    }
+  return cmdret_new (RET_FAILURE, "select: unknown window '%s'", str);
+}
+
 /* switch to window number or name */
 cmdret *
 cmd_select (int interactive UNUSED, struct cmdarg **args)
 {
   cmdret *ret = NULL;
   char *str;
-  int n;
 
   /* FIXME: This is manually done because of the kinds of things
      select accepts. */
@@ -1386,49 +1429,13 @@ cmd_select (int interactive UNUSED, struct cmdarg **args)
   /* Only search if the string contains something to search for. */
   if (strlen (str) > 0)
     {
-      if (strlen (str) == 1 && str[0] == '-')
-        {
-          blank_frame (current_frame());
-          ret = cmdret_new (RET_SUCCESS, NULL);
-        }
-      /* try by number */
-      else if ((n = string_to_positive_int (str)) >= 0)
-        {
-          rp_window_elem *elem = group_find_window_by_number (rp_current_group, n);
-
-          if (elem)
-            {
-              goto_window (elem->win);
-              ret = cmdret_new (RET_SUCCESS, NULL);
-            }
-          else
-            {
-              /* show the window list as feedback */
-              show_bar (current_screen (), defaults.window_fmt);
-              ret = cmdret_new (RET_FAILURE,
-                                "select: unknown window number '%d'", n);
-            }
-        }
-      else
-        /* try by name */
-        {
-          rp_window *win = find_window_name (str, 1);
-
-          if (!win)
-            win = find_window_name (str, 0);
-
-          if (win)
-            {
-              goto_window (win);
-              ret = cmdret_new (RET_SUCCESS, NULL);
-            }
-          else
-            ret = cmdret_new (RET_FAILURE, "select: unknown window '%s'", str);
-        }
+      ret = cmd_select_string(str);
     }
   else
-    /* Silently fail, since the user didn't provide a window spec */
-    ret = cmdret_new (RET_SUCCESS, NULL);
+    {
+      /* User provided no window spec, so succeed but do nothing. */
+      ret = cmdret_new (RET_SUCCESS, NULL);
+    }
 
   free (str);
 
