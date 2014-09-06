@@ -165,6 +165,7 @@ RP_CMD (other);
 RP_CMD (prev);
 RP_CMD (prev_frame);
 RP_CMD (prevscreen);
+RP_CMD (pushwindow);
 RP_CMD (quit);
 RP_CMD (redisplay);
 RP_CMD (remhook);

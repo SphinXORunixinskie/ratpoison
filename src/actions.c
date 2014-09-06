@@ -295,6 +295,8 @@ init_user_commands(void)
                "Hook: ", arg_HOOK);
   add_command ("meta",          cmd_meta,       1, 0, 0,
                "key: ", arg_KEY);
+  add_command("pushwindow",    cmd_pushwindow, 1, 1, 1,
+              "Push current window to frame: ", arg_FRAME);
   add_command ("msgwait",       cmd_msgwait,    1, 0, 0,
                "", arg_NUMBER);
   add_command ("newkmap",       cmd_newkmap,    1, 1, 1,
@@ -754,6 +756,7 @@ initialize_default_keybindings (void)
   add_keybinding (XK_colon, 0, "colon", map);
   add_keybinding (XK_exclam, 0, "exec", map);
   add_keybinding (XK_exclam, RP_CONTROL_MASK, "colon exec " TERM_PROG " -e ", map);
+  add_keybinding (XK_h, 0, "pushwindow", map);
   add_keybinding (XK_i, 0, "info", map);
   add_keybinding (XK_i, RP_CONTROL_MASK, "info", map);
   add_keybinding (XK_k, 0, "delete", map);
@@ -3679,6 +3682,33 @@ set_maxsizegravity (struct cmdarg **args)
     return cmdret_new (RET_SUCCESS, "%s", wingravity_to_string (defaults.maxsize_gravity));
 
   defaults.maxsize_gravity = ARG(0,gravity);
+
+  return cmdret_new (RET_SUCCESS, NULL);
+}
+
+cmdret *
+cmd_pushwindow (int interactive UNUSED, struct cmdarg **args)
+{
+  rp_frame *src_frame = current_frame();
+  rp_frame *dest_frame = ARG(0, frame);
+
+  rp_window *window_to_move = find_window_number(src_frame->win_number);
+  rp_window *window_to_reveal = find_window_for_frame (src_frame);
+  rp_window *window_to_cover = set_frames_window(dest_frame, window_to_move);
+  maximize (window_to_move);
+  unhide_window (window_to_move);
+  XRaiseWindow (dpy, window_to_move->w);
+
+  hide_window(window_to_cover);
+
+  set_frames_window(src_frame, window_to_reveal);
+  maximize (window_to_reveal);
+  unhide_window (window_to_reveal);
+  XRaiseWindow (dpy, window_to_reveal->w);
+
+  set_active_frame(src_frame, 0);
+
+  // Note that I haven't pushed anything to the undo stack yet.
 
   return cmdret_new (RET_SUCCESS, NULL);
 }
