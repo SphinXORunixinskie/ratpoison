@@ -270,6 +270,12 @@ This toggles between the current window and the last window. By
 default, this is bound to @kbd{C-t C-t}.
 @end deffn
 
+@deffn Command pushwindow
+Move the current window to a different frame, leaving the focus
+on the current frame. Prompts for the destination frame.
+By default, this is bound to @kbd{C-t h}.
+@end deffn
+
 @deffn Command prev
 This jumps you to the previous window in the window list. By default,
 this is bound to @kbd{C-t p}.
