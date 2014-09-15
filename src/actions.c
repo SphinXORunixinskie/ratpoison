@@ -295,6 +295,8 @@ init_user_commands(void)
                "Hook: ", arg_HOOK);
   add_command ("meta",          cmd_meta,       1, 0, 0,
                "key: ", arg_KEY);
+  add_command("pullwindow",    cmd_pullwindow, 1, 1, 1,
+              "Pull window to current frame: ", arg_FRAME);
   add_command("pushwindow",    cmd_pushwindow, 1, 1, 1,
               "Push current window to frame: ", arg_FRAME);
   add_command ("msgwait",       cmd_msgwait,    1, 0, 0,
@@ -761,7 +763,7 @@ initialize_default_keybindings (void)
   add_keybinding (XK_i, RP_CONTROL_MASK, "info", map);
   add_keybinding (XK_k, 0, "delete", map);
   add_keybinding (XK_k, RP_CONTROL_MASK, "delete", map);
-  add_keybinding (XK_l, 0, "redisplay", map);
+  add_keybinding (XK_l, 0, "pushwindow", map);
   add_keybinding (XK_l, RP_CONTROL_MASK, "redisplay", map);
   add_keybinding (XK_m, 0, "lastmsg", map);
   add_keybinding (XK_m, RP_CONTROL_MASK, "lastmsg", map);
@@ -3687,29 +3689,24 @@ set_maxsizegravity (struct cmdarg **args)
 }
 
 cmdret *
+cmd_pullwindow (int interactive UNUSED, struct cmdarg **args)
+{
+  rp_frame *src_frame = ARG(0, frame);
+  rp_frame *dest_frame = current_frame();
+  if (move_window_between_frames(src_frame, dest_frame))
+    return cmdret_new (RET_FAILURE, "no window to pull");
+  set_active_frame(dest_frame, 0);
+  return cmdret_new (RET_SUCCESS, NULL);
+}
+
+cmdret *
 cmd_pushwindow (int interactive UNUSED, struct cmdarg **args)
 {
   rp_frame *src_frame = current_frame();
   rp_frame *dest_frame = ARG(0, frame);
-
-  rp_window *window_to_move = find_window_number(src_frame->win_number);
-  rp_window *window_to_reveal = find_window_for_frame (src_frame);
-  rp_window *window_to_cover = set_frames_window(dest_frame, window_to_move);
-  maximize (window_to_move);
-  unhide_window (window_to_move);
-  XRaiseWindow (dpy, window_to_move->w);
-
-  hide_window(window_to_cover);
-
-  set_frames_window(src_frame, window_to_reveal);
-  maximize (window_to_reveal);
-  unhide_window (window_to_reveal);
-  XRaiseWindow (dpy, window_to_reveal->w);
-
+  if (move_window_between_frames(src_frame, dest_frame))
+    return cmdret_new (RET_FAILURE, "no window to push");
   set_active_frame(src_frame, 0);
-
-  // Note that I haven't pushed anything to the undo stack yet.
-
   return cmdret_new (RET_SUCCESS, NULL);
 }
 
