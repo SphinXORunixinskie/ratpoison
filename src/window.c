@@ -107,30 +107,31 @@ window_name (rp_window *win)
 
 int move_window_between_frames(rp_frame *src_frame, rp_frame *dest_frame)
 {
+  rp_frame *active_frame = current_frame();
+  rp_window *orig_window = find_window_number(active_frame->win_number);
+
   rp_window *window_to_move = find_window_number(src_frame->win_number);
   if (!window_to_move)
     return -1;
-  rp_window *window_to_reveal = find_window_for_frame (src_frame);
+  rp_window *window_to_reveal = find_window_for_frame(src_frame);
   rp_window *window_to_cover = set_frames_window(dest_frame, window_to_move);
   maximize (window_to_move);
   unhide_window (window_to_move);
-  XRaiseWindow (dpy, window_to_move->w);
 
-  hide_window(window_to_cover);
+  if(window_to_cover)
+    hide_window(window_to_cover);
 
   if (!window_to_reveal)
     window_to_reveal = window_to_cover;
+  // It could happen that we are moving a window with no window to
+  // replace it. In that case, just leave the frame empty.
+  set_frames_window(src_frame, window_to_reveal);
   if (window_to_reveal) {
-    // It could happen that we are moving a window with no window to
-    // replace it. In that case, just leave the frame empty.
-    set_frames_window(src_frame, window_to_reveal);
     maximize (window_to_reveal);
     unhide_window (window_to_reveal);
-    XRaiseWindow (dpy, window_to_reveal->w);
   }
-  // TODO(jma): What if a window is transient?
-  // TODO(jma): What if we are covering a transient window?
-  // TODO(jma): What manages active and inactive frame coloring?  Probably give_window_focus().
+  rp_window *new_window = find_window_number(active_frame->win_number);
+  give_window_focus(new_window, orig_window);
   return 0;
 }
 

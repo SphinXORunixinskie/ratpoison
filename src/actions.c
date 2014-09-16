@@ -763,7 +763,7 @@ initialize_default_keybindings (void)
   add_keybinding (XK_i, RP_CONTROL_MASK, "info", map);
   add_keybinding (XK_k, 0, "delete", map);
   add_keybinding (XK_k, RP_CONTROL_MASK, "delete", map);
-  add_keybinding (XK_l, 0, "pushwindow", map);
+  add_keybinding (XK_l, 0, "pullwindow", map);
   add_keybinding (XK_l, RP_CONTROL_MASK, "redisplay", map);
   add_keybinding (XK_m, 0, "lastmsg", map);
   add_keybinding (XK_m, RP_CONTROL_MASK, "lastmsg", map);
