@@ -17,7 +17,7 @@ dnl You should have received a copy of the GNU General Public License
 dnl along with this program; if not, write to the Free Software
 dnl Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 
-AC_INIT([ratpoison], [1.4.7-beta], [ratpoison-devel@nongnu.org])
+AC_INIT([ratpoison], [1.4.8], [ratpoison-devel@nongnu.org])
 AC_CONFIG_AUX_DIR([build-aux])
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_SRCDIR([src/main.c])
@@ -188,7 +188,7 @@ AS_IF([test "$with_electric_fence" = yes],
 
 dnl Checks for header files.
 AC_HEADER_STDC
-AC_CHECK_HEADERS([pwd.h sys/ioctl.h])
+AC_CHECK_HEADERS([pwd.h sys/ioctl.h sys/stat.h])
 
 dnl Checks for typedefs, structures, and compiler characteristics.
 AC_C_TYPEOF
