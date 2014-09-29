@@ -184,7 +184,7 @@ add_to_window_list (rp_screen *s, Window w)
 
   get_mouse_position (new_window, &new_window->mouse_x, &new_window->mouse_y);
 
-  XSelectInput (dpy, new_window->w, WIN_EVENTS);
+  XSelectInput (dpy, new_window->w, win_events);
 
   new_window->user_name = xstrdup ("Unnamed");
 
@@ -649,6 +649,7 @@ void
 init_window_stuff (void)
 {
   rp_window_numset = numset_new ();
+  init_focus_policy();
 }
 
 void
@@ -673,6 +674,31 @@ free_window_stuff (void)
     }
 
   numset_free (rp_window_numset);
+}
+
+void
+init_focus_policy(void)
+{
+  switch(defaults.focus_policy)
+    {
+    case FOCUS_MANUAL:
+      win_events = WIN_EVENTS;
+      root_events = ROOT_EVENTS;
+      break;
+    case FOCUS_SLOPPY:
+      win_events = WIN_EVENTS_WITH_MOVEMENT;
+      root_events = ROOT_EVENTS;
+      break;
+    case FOCUS_FOLLOWS_MOUSE:
+      win_events = WIN_EVENTS_WITH_MOVEMENT;
+      root_events = ROOT_EVENTS_WITH_MOVEMENT;
+      break;
+    default:
+      PRINT_DEBUG(("Unexpected focus policy (%d)! Defaulting to manual focus.\n", defaults.focus_policy));
+      defaults.focus_policy = FOCUS_MANUAL;
+      win_events = WIN_EVENTS;
+      root_events = ROOT_EVENTS;
+  }
 }
 
 rp_frame *

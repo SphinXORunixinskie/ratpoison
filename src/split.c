@@ -1085,6 +1085,39 @@ find_frame_number (int num)
             return cur;
         }
     }
+  return NULL;
+}
 
+rp_frame *
+find_frame_by_coordinates (Window root, int x, int y)
+{
+  /* This is inefficient.
+
+     It would be better to keep an indexed structure of rectangles so
+     that we can search in sub-linear time. That would require
+     maintaining that structure with every frame operation, which
+     incurs some overhead on all frame operations (at least, if
+     defaults.focus_policy > 0). So the subject should be thought
+     through and measured carefully.
+  */
+
+  int i;
+  rp_frame *cur;
+
+  for (i=0; i<num_screens; i++)
+    {
+      rp_screen *s = &screens[i];
+      list_for_each_entry (cur, &s->frames, node)
+        {
+          if(root == s->root)
+            {
+              if (cur->x <= x && cur->y <= y && x < cur->x + cur->width && y < cur->y + cur->height) {
+                return cur;
+              }
+            }
+        }
+    }
+
+  PRINT_DEBUG(("No frame matches coordinates.\n"));
   return NULL;
 }

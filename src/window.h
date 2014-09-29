@@ -54,6 +54,7 @@ void get_window_list (char *fmt, char *delim, struct sbuf *buffer,
                       int *mark_start, int *mark_end);
 void init_window_stuff (void);
 void free_window_stuff (void);
+void init_focus_policy(void);
 
 rp_frame *win_get_frame (rp_window *win);
 

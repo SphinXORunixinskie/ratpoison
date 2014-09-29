@@ -266,10 +266,7 @@ init_screen (rp_screen *s, int screen_num)
   /* Select on some events on the root window, if this fails, then
      there is already a WM running and the X Error handler will catch
      it, terminating ratpoison. */
-  XSelectInput(dpy, RootWindow (dpy, screen_num),
-               PropertyChangeMask | ColormapChangeMask
-	       | SubstructureRedirectMask | SubstructureNotifyMask
-	       | StructureNotifyMask);
+  XSelectInput(dpy, RootWindow (dpy, screen_num), root_events);
   XSync (dpy, False);
 
   /* Set the numset for the frames to our global numset. */

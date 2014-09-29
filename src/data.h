@@ -259,6 +259,11 @@ struct rp_defaults
   /* Pointer warping toggle. */
   int warp;
 
+  /* Ignore the mouse (FOCUS_MANUAL), sloppy focus policy
+   * (FOCUS_SLOPPY), or change focus as the mouse moves
+   * (FOCUS_FOLLOWS_MOUSE). */
+  int focus_policy;
+
   int history_size;
   /* remove older history when adding the same again */
   int history_compaction;

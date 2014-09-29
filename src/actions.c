@@ -246,6 +246,8 @@ init_user_commands(void)
   add_command ("swap",	cmd_swap, 2, 1, 1,
 	       "destination frame: ", arg_FRAME,
 	       "source frame: ", arg_FRAME);
+  add_command ("focus_policy", cmd_focus_policy,  1, 1, 1,
+               "Focus policy [manual,sloppy,ffm]: ", arg_STRING);
   add_command ("focuslast",     cmd_focuslast,  0, 0, 0);
   add_command ("focusleft",     cmd_focusleft,  0, 0, 0);
   add_command ("focusright",    cmd_focusright, 0, 0, 0);
@@ -4493,6 +4495,39 @@ cmd_startup_message (int interactive UNUSED, struct cmdarg **args)
   return cmdret_new (RET_SUCCESS, NULL);
 }
 
+static void sync_wins (rp_screen *s);
+
+cmdret *
+cmd_focus_policy (int interactive UNUSED, struct cmdarg **args)
+{
+  if (args[0] == NULL) {
+    /* TODO(jeff@purple.com): Fix error message with array of policy names. And below. */
+    return cmdret_new (RET_SUCCESS, "%s", defaults.focus_policy ? "on":"off");
+  }
+
+  int succeeded = 1;
+  if (!strcasecmp (ARG_STRING(0), "manual")) {
+    defaults.focus_policy = FOCUS_MANUAL;
+  } else if (!strcasecmp (ARG_STRING(0), "sloppy")) {
+    defaults.focus_policy = FOCUS_SLOPPY;
+  } else if (!strcasecmp (ARG_STRING(0), "ffm")) {
+    defaults.focus_policy = FOCUS_FOLLOWS_MOUSE;
+  } else {
+    defaults.focus_policy = FOCUS_MANUAL;
+    succeeded = 0;
+  }
+  init_focus_policy();
+
+  /* Hack. I only need to set the input mask. */
+  int i;
+  for (i=0; i<num_screens; i++)
+    sync_wins(&screens[i]);
+
+  if(succeeded)
+    return cmdret_new (RET_SUCCESS, NULL);
+  return cmdret_new (RET_FAILURE, "focus_policy: invalid argument");
+}
+
 cmdret *
 cmd_focuslast (int interactive UNUSED, struct cmdarg **args UNUSED)
 {
@@ -4664,6 +4699,7 @@ sync_wins (rp_screen *s)
   unsigned int i, nwins;
   Window dw1, dw2, *wins;
   XQueryTree(dpy, s->root, &dw1, &dw2, &wins, &nwins);
+  XSelectInput(dpy, RootWindow(dpy, s->screen_num), root_events);
 
   /* Remove any windows in our cached lists that aren't in the query
      tree. These windows have been destroyed. */
@@ -4759,6 +4795,7 @@ sync_wins (rp_screen *s)
             }
 
           /* We've handled the window. */
+          XSelectInput (dpy, win->w, win_events);
           continue;
         }
 
@@ -4786,6 +4823,7 @@ sync_wins (rp_screen *s)
             }
 
           /* We've handled the window. */
+          XSelectInput (dpy, win->w, win_events);
           continue;
         }
 
@@ -4799,7 +4837,6 @@ sync_wins (rp_screen *s)
               && get_state (win) == IconicState))
         map_window (win);
     }
-
 }
 
 static int tmpwm_error_raised = 0;
@@ -4878,10 +4915,7 @@ cmd_tmpwm (int interactive UNUSED, struct cmdarg **args)
     tmpwm_error_raised = 0;
     for (i=0; i<num_screens; i++)
       {
-        XSelectInput(dpy, RootWindow (dpy, screens[i].screen_num),
-                     PropertyChangeMask | ColormapChangeMask
-                     | SubstructureRedirectMask | SubstructureNotifyMask
-                     | StructureNotifyMask);
+        XSelectInput(dpy, RootWindow (dpy, screens[i].screen_num), root_events);
         XSync (dpy, False);
       }
     if (tmpwm_error_raised)

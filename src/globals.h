@@ -42,11 +42,34 @@
 
 #define MAX_FONT_WIDTH(f) (rp_font_width)
 
+#define ROOT_EVENTS (PropertyChangeMask | ColormapChangeMask | SubstructureRedirectMask | SubstructureNotifyMask | StructureNotifyMask)
+#define ROOT_EVENTS_WITH_MOVEMENT (ROOT_EVENTS | EnterWindowMask | PointerMotionMask)
 #define WIN_EVENTS (StructureNotifyMask | PropertyChangeMask | ColormapChangeMask | FocusChangeMask)
+#define WIN_EVENTS_WITH_MOVEMENT (WIN_EVENTS | EnterWindowMask)
 /* EMPTY is used when a frame doesn't contain a window, or a window
    doesn't have a frame. Any time a field refers to the number of a
    window/frame/screen/etc, Use EMPTY to denote a lack there of. */
 #define EMPTY -1
+
+/* Focus policies */
+/* In manual focus, only the keyboard affects focus. The mouse does not. */
+#define FOCUS_MANUAL 0
+/* In sloppy focus, we focus on user (non-root) windows over which the
+ * mouse moves. This notably means that when the mouse moves to a part
+ * of the screen with no user window (i.e., the root window), the
+ * window the pointer has left remains focused until a new user window
+ * is entered. */
+#define FOCUS_SLOPPY 1
+/* Focus follows mouse causes the focus to follow the mouse
+ * strictly. This is not quite true, because ratpoison will never
+ * focus its own windows, things like the message bar (C-t m) and the
+ * window bar (C-t w).  In particular, if the mouse moves over the
+ * root window, the root window itself is focussed, which the user
+ * perceives as input going to no window. Many applications leave a
+ * pixel or two at the edges where the root window is visible, for
+ * example because they restrict resize to multiples of some font
+ * dimension. */
+#define FOCUS_FOLLOWS_MOUSE 2
 
 /* Possible values for defaults.window_list_style */
 #define STYLE_ROW    0
@@ -108,6 +131,8 @@ extern int rp_current_screen;
 extern rp_screen *screens;
 extern int num_screens;
 
+extern unsigned int win_events;
+extern unsigned int root_events;
 extern XEvent rp_current_event;
 
 extern Display *dpy;
