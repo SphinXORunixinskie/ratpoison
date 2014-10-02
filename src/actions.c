@@ -1806,6 +1806,9 @@ read_frame (struct sbuf *s,  struct cmdarg **arg)
           attr.border_pixel = screen->fg_color;
           attr.background_pixel = screen->bg_color;
           attr.override_redirect = True;
+          /* Do not propagate PointerMotion events, set in case the
+             user sets focus policy other than FOCUS_MANUAL. */
+          attr.do_not_propagate_mask = PointerMotionMask;
 
           list_for_each_entry (cur, &screen->frames, node)
             {
@@ -1822,7 +1825,7 @@ read_frame (struct sbuf *s,  struct cmdarg **arg)
               /* Create and map the window. */
               wins[i] = XCreateWindow (dpy, screen->root, screen->left + cur->x, screen->top + cur->y, width, height, 1,
                                        CopyFromParent, CopyFromParent, CopyFromParent,
-                                       CWOverrideRedirect | CWBorderPixel | CWBackPixel,
+                                       CWOverrideRedirect | CWBorderPixel | CWBackPixel | CWDontPropagate,
                                        &attr);
               XMapWindow (dpy, wins[i]);
               XClearWindow (dpy, wins[i]);
