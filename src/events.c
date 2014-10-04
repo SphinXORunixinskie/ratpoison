@@ -905,7 +905,7 @@ delegate_event (XEvent *ev)
           }
           rp_frame *new_frame = find_frame_number(win->frame_number);
           if(new_frame)
-            set_active_frame(new_frame, 0);
+            set_active_frame_motion(new_frame, 0);
           else
             PRINT_DEBUG(("  Ignoring focus request: frame not found.\n"));
         } else if (defaults.focus_policy == FOCUS_FOLLOWS_MOUSE && is_a_root_window(any_event->window)) {
@@ -916,7 +916,7 @@ delegate_event (XEvent *ev)
           Window root_win = crossing_event->root;
           rp_frame *new_frame = find_frame_by_coordinates (root_win, x, y);
           if(new_frame && new_frame->win_number < 0 && new_frame != current_frame())
-            set_active_frame(new_frame, 0);
+            set_active_frame_motion(new_frame, 0);
           else {
             PRINT_DEBUG(("  Ignoring focus request: win=%d, not_current=%d\n", new_frame->win_number, new_frame != current_frame()));
           }
@@ -935,7 +935,7 @@ delegate_event (XEvent *ev)
           Window root_win = motion_event->root;
           rp_frame *new_frame = find_frame_by_coordinates (root_win, x, y);
           if(new_frame && new_frame->win_number < 0 && new_frame != current_frame())
-            set_active_frame(new_frame, 0);
+            set_active_frame_motion(new_frame, 0);
           else {
             PRINT_DEBUG(("  Ignoring focus request: win=%d, not_current=%d\n", new_frame->win_number, new_frame != current_frame()));
           }

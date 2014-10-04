@@ -399,9 +399,12 @@ save_mouse_position (rp_window *win)
   ignore_badwindow--;
 }
 
-/* Takes focus away from last_win and gives focus to win */
+/* Takes focus away from last_win and gives focus to win.
+
+   If motion is true, then the focus event is caused by mouse
+   movement, so do not save or warp the cursor. */
 void
-give_window_focus (rp_window *win, rp_window *last_win)
+give_window_focus (rp_window *win, rp_window *last_win, int motion)
 {
   /* counter increments every time this function is called. This way
      we can track which window was last accessed. */
@@ -411,17 +414,23 @@ give_window_focus (rp_window *win, rp_window *last_win)
      win are different windows. */
   if (last_win != NULL && win != last_win)
     {
-      save_mouse_position (last_win);
+      if(!motion)
+        {
+          /* Only save the mouse position if the focus change is not
+             being caused by mouse movement. */
+          save_mouse_position (last_win);
+        }
       XSetWindowBorder (dpy, last_win->w, last_win->scr->bw_color);
     }
 
-  if (win == NULL) return;
+  if (win == NULL)
+    return;
 
   counter++;
   win->last_access = counter;
   unhide_window (win);
 
-  if (defaults.warp)
+  if ((defaults.warp || (FOCUS_MANUAL != defaults.focus_policy)) && !motion)
     {
       PRINT_DEBUG (("Warp pointer\n"));
       XWarpPointer (dpy, None, win->w,
@@ -552,7 +561,7 @@ set_active_window_body (rp_window *win, int force)
   maximize (win);
 
   /* Focus the window. */
-  give_window_focus (win, last_win);
+  give_window_focus (win, last_win, 0);
 
   /* The other windows in the frame will be hidden if this window
      doesn't qualify as a transient window (ie dialog box. */
