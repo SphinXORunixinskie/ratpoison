@@ -295,6 +295,10 @@ init_user_commands(void)
                "Hook: ", arg_HOOK);
   add_command ("meta",          cmd_meta,       1, 0, 0,
                "key: ", arg_KEY);
+  add_command("pullwindow",    cmd_pullwindow, 1, 1, 1,
+              "Pull window to current frame: ", arg_FRAME);
+  add_command("pushwindow",    cmd_pushwindow, 1, 1, 1,
+              "Push current window to frame: ", arg_FRAME);
   add_command ("msgwait",       cmd_msgwait,    1, 0, 0,
                "", arg_NUMBER);
   add_command ("newkmap",       cmd_newkmap,    1, 1, 1,
@@ -754,11 +758,12 @@ initialize_default_keybindings (void)
   add_keybinding (XK_colon, 0, "colon", map);
   add_keybinding (XK_exclam, 0, "exec", map);
   add_keybinding (XK_exclam, RP_CONTROL_MASK, "colon exec " TERM_PROG " -e ", map);
+  add_keybinding (XK_h, 0, "pushwindow", map);
   add_keybinding (XK_i, 0, "info", map);
   add_keybinding (XK_i, RP_CONTROL_MASK, "info", map);
   add_keybinding (XK_k, 0, "delete", map);
   add_keybinding (XK_k, RP_CONTROL_MASK, "delete", map);
-  add_keybinding (XK_l, 0, "redisplay", map);
+  add_keybinding (XK_l, 0, "pullwindow", map);
   add_keybinding (XK_l, RP_CONTROL_MASK, "redisplay", map);
   add_keybinding (XK_m, 0, "lastmsg", map);
   add_keybinding (XK_m, RP_CONTROL_MASK, "lastmsg", map);
@@ -3680,6 +3685,28 @@ set_maxsizegravity (struct cmdarg **args)
 
   defaults.maxsize_gravity = ARG(0,gravity);
 
+  return cmdret_new (RET_SUCCESS, NULL);
+}
+
+cmdret *
+cmd_pullwindow (int interactive UNUSED, struct cmdarg **args)
+{
+  rp_frame *src_frame = ARG(0, frame);
+  rp_frame *dest_frame = current_frame();
+  if (move_window_between_frames(src_frame, dest_frame))
+    return cmdret_new (RET_FAILURE, "no window to pull");
+  set_active_frame(dest_frame, 0);
+  return cmdret_new (RET_SUCCESS, NULL);
+}
+
+cmdret *
+cmd_pushwindow (int interactive UNUSED, struct cmdarg **args)
+{
+  rp_frame *src_frame = current_frame();
+  rp_frame *dest_frame = ARG(0, frame);
+  if (move_window_between_frames(src_frame, dest_frame))
+    return cmdret_new (RET_FAILURE, "no window to push");
+  set_active_frame(src_frame, 0);
   return cmdret_new (RET_SUCCESS, NULL);
 }
 

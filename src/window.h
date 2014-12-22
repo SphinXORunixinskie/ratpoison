@@ -36,6 +36,7 @@ void goto_window (rp_window *win);
 void set_current_window (rp_window *win);
 void update_window_gravity (rp_window *win);
 char *window_name (rp_window *win);
+int move_window_between_frames(rp_frame *src_frame, rp_frame *dest_frame);
 
 /* int goto_window_name (char *name); */
 rp_window *find_window_other (rp_screen *screen);
