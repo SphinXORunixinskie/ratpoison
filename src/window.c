@@ -131,7 +131,7 @@ int move_window_between_frames(rp_frame *src_frame, rp_frame *dest_frame)
     unhide_window (window_to_reveal);
   }
   rp_window *new_window = find_window_number(active_frame->win_number);
-  give_window_focus(new_window, orig_window);
+  give_window_focus(new_window, orig_window, 0);
   return 0;
 }
 
