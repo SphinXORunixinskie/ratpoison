@@ -38,6 +38,10 @@
 
 #include "ratpoison.h"
 
+/* The events we care about. This depends on the value of the flag
+   focus_policy. */
+unsigned int win_events = 0;
+unsigned int root_events = 0;
 /* The event currently being processed. Mostly used in functions from
    action.c which need to forward events to other windows. */
 XEvent rp_current_event;
@@ -874,13 +878,68 @@ delegate_event (XEvent *ev)
 	
     case MapNotify:
     case Expose:
-    case MotionNotify:
     case KeyRelease:
     case ReparentNotify:
-    case EnterNotify:
     case SelectionNotify:
     case CirculateRequest:
+    case LeaveNotify:
+    case VisibilityNotify:
       /* Ignore these events. */
+      break;
+
+    case EnterNotify:
+      PRINT_DEBUG (("--- Handling EnterNotify ---\n"));
+      if (defaults.focus_policy != FOCUS_MANUAL) {
+        /* Only pay attention if focus follows mouse. */
+        XAnyEvent *any_event = (XAnyEvent *)ev;
+        rp_window *win = find_window(any_event->window);
+        PRINT_DEBUG(("Mouse focus request: rp_window=%u,  Xwindow=%u\n", (unsigned int)win, (unsigned int)any_event->window));
+        if (win && current_window() != win) {
+          /* Also check for transient windows. */
+          if(is_rp_window_for_screen(win->w, current_screen())) {
+            /* Don't focus ratpoison screen windows. It's not
+               meaningful, the user should never mean it, and we don't
+               mean to support it. */
+            PRINT_DEBUG(("  Ignoring enter event on screen window.\n"));
+            return;
+          }
+          rp_frame *new_frame = find_frame_number(win->frame_number);
+          if(new_frame)
+            set_active_frame_motion(new_frame, 0);
+          else
+            PRINT_DEBUG(("  Ignoring focus request: frame not found.\n"));
+        } else if (defaults.focus_policy == FOCUS_FOLLOWS_MOUSE && is_a_root_window(any_event->window)) {
+          PRINT_DEBUG(("  focus: root window event\n"));
+          XCrossingEvent *crossing_event = (XCrossingEvent *)ev;
+          int x = crossing_event->x_root;
+          int y = crossing_event->y_root;
+          Window root_win = crossing_event->root;
+          rp_frame *new_frame = find_frame_by_coordinates (root_win, x, y);
+          if(new_frame && new_frame->win_number < 0 && new_frame != current_frame())
+            set_active_frame_motion(new_frame, 0);
+          else {
+            PRINT_DEBUG(("  Ignoring focus request: win=%d, not_current=%d\n", new_frame->win_number, new_frame != current_frame()));
+          }
+        } else {
+          PRINT_DEBUG(("  Ignoring focus request.\n"));
+        }
+      }
+      break;
+
+    case MotionNotify:
+      PRINT_DEBUG (("--- Handling MotionNotify ---\n"));
+      XPointerMovedEvent *motion_event = (XPointerMovedEvent *)ev;
+      if (defaults.focus_policy == FOCUS_FOLLOWS_MOUSE && is_a_root_window(motion_event->window)) {
+          int x = motion_event->x_root;
+          int y = motion_event->y_root;
+          Window root_win = motion_event->root;
+          rp_frame *new_frame = find_frame_by_coordinates (root_win, x, y);
+          if(new_frame && new_frame->win_number < 0 && new_frame != current_frame())
+            set_active_frame_motion(new_frame, 0);
+          else {
+            PRINT_DEBUG(("  Ignoring focus request: win=%d, not_current=%d\n", new_frame->win_number, new_frame != current_frame()));
+          }
+      }
       break;
 
     default:

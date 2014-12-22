@@ -592,6 +592,7 @@ init_defaults (void)
   defaults.win_name = WIN_NAME_TITLE;
   defaults.startup_message = 1;
   defaults.warp = 0;
+  defaults.focus_policy = FOCUS_MANUAL;
   defaults.window_list_style = STYLE_COLUMN;
 
   defaults.history_size = 20;

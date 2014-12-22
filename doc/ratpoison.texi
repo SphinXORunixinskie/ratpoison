@@ -819,6 +819,24 @@ Move to the frame right of the current frame.
 Move to the frame above the current frame.
 @end deffn
 
+@deffn Command focus_policy
+Tell ratpoison whether and how to interpret mouse movement for focusing frames.
+The default behavior, ``manual'', is to ignore the rodent. This is, of course,
+the default.
+The other two possibilities are ``sloppy'' and ``ffm'' (focus follows mouse).
+
+In sloppy mode, the mouse focuses a frame when it enters, but leaving a
+frame (for example, because the next frame has no window mapped in it)
+does not change focus. This is useful when you like to push the mouse
+over a nearby empty frame without changing focus. On the other hand, the
+empty frame must be focused by keyboard actions in sloppy mode.
+
+In ffm mode, the focus really does follow the mouse: mousing over an empty frame
+focuses that empty frame. This can be useful for creating new windows in empty frames.
+
+Of course, regardless of focus policy, the keyboard focus commands are available and work correctly.
+@end deffn
+
 @node Saving and Restoring Frame Sets
 @section Saving and Restoring Frame Sets
 ratpoison provides two commands, @command{fdump} and

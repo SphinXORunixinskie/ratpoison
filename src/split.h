@@ -41,6 +41,8 @@ rp_window *current_window (void);
 void init_frame_lists (void);
 void init_frame_list (rp_screen *screen);
 void set_active_frame (rp_frame *frame, int force_indicator);
+void set_active_frame_motion (rp_frame *frame, int force_indicator);
+void set_active_frame_sub (rp_frame *frame, int force_indicator, int motion);
 void exchange_with_frame (rp_frame *cur, rp_frame *frame);
 void blank_frame (rp_frame *frame);
 void show_frame_indicator (int force);
@@ -56,5 +58,5 @@ rp_frame *find_last_frame (void);
 rp_frame * find_frame_number (int num);
 
 rp_frame *current_frame (void);
-
+rp_frame *find_frame_by_coordinates (Window root, int x, int y);
 #endif

@@ -129,6 +129,7 @@ RP_CMD (exchangedown);
 RP_CMD (exchangeleft);
 RP_CMD (exchangeright);
 RP_CMD (swap);
+RP_CMD (focus_policy);
 RP_CMD (frestore);
 RP_CMD (fselect);
 RP_CMD (gdelete);

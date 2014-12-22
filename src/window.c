@@ -214,7 +214,7 @@ add_to_window_list (rp_screen *s, Window w)
 
   get_mouse_position (new_window, &new_window->mouse_x, &new_window->mouse_y);
 
-  XSelectInput (dpy, new_window->w, WIN_EVENTS);
+  XSelectInput (dpy, new_window->w, win_events);
 
   new_window->user_name = xstrdup ("Unnamed");
 
@@ -429,9 +429,12 @@ save_mouse_position (rp_window *win)
   ignore_badwindow--;
 }
 
-/* Takes focus away from last_win and gives focus to win */
+/* Takes focus away from last_win and gives focus to win.
+
+   If motion is true, then the focus event is caused by mouse
+   movement, so do not save or warp the cursor. */
 void
-give_window_focus (rp_window *win, rp_window *last_win)
+give_window_focus (rp_window *win, rp_window *last_win, int motion)
 {
   /* counter increments every time this function is called. This way
      we can track which window was last accessed. */
@@ -441,17 +444,23 @@ give_window_focus (rp_window *win, rp_window *last_win)
      win are different windows. */
   if (last_win != NULL && win != last_win)
     {
-      save_mouse_position (last_win);
+      if(!motion)
+        {
+          /* Only save the mouse position if the focus change is not
+             being caused by mouse movement. */
+          save_mouse_position (last_win);
+        }
       XSetWindowBorder (dpy, last_win->w, last_win->scr->bw_color);
     }
 
-  if (win == NULL) return;
+  if (win == NULL)
+    return;
 
   counter++;
   win->last_access = counter;
   unhide_window (win);
 
-  if (defaults.warp)
+  if ((defaults.warp || (FOCUS_MANUAL != defaults.focus_policy)) && !motion)
     {
       PRINT_DEBUG (("Warp pointer\n"));
       XWarpPointer (dpy, None, win->w,
@@ -573,7 +582,7 @@ set_active_window_body (rp_window *win, int force)
   maximize (win);
 
   /* Focus the window. */
-  give_window_focus (win, last_win);
+  give_window_focus (win, last_win, 0);
 
   /* The other windows in the frame will be hidden if this window
      doesn't qualify as a transient window (ie dialog box. */
@@ -670,6 +679,7 @@ void
 init_window_stuff (void)
 {
   rp_window_numset = numset_new ();
+  init_focus_policy();
 }
 
 void
@@ -694,6 +704,31 @@ free_window_stuff (void)
     }
 
   numset_free (rp_window_numset);
+}
+
+void
+init_focus_policy(void)
+{
+  switch(defaults.focus_policy)
+    {
+    case FOCUS_MANUAL:
+      win_events = WIN_EVENTS;
+      root_events = ROOT_EVENTS;
+      break;
+    case FOCUS_SLOPPY:
+      win_events = WIN_EVENTS_WITH_MOVEMENT;
+      root_events = ROOT_EVENTS;
+      break;
+    case FOCUS_FOLLOWS_MOUSE:
+      win_events = WIN_EVENTS_WITH_MOVEMENT;
+      root_events = ROOT_EVENTS_WITH_MOVEMENT;
+      break;
+    default:
+      PRINT_DEBUG(("Unexpected focus policy (%d)! Defaulting to manual focus.\n", defaults.focus_policy));
+      defaults.focus_policy = FOCUS_MANUAL;
+      win_events = WIN_EVENTS;
+      root_events = ROOT_EVENTS;
+  }
 }
 
 rp_frame *

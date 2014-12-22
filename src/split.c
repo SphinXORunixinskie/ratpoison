@@ -817,10 +817,32 @@ remove_frame (rp_frame *frame)
   frame_free (s, frame);
 }
 
-/* Switch the input focus to another frame, and therefore a different
-   window. */
+/* Set the active frame. */
 void
 set_active_frame (rp_frame *frame, int force_indicator)
+{
+  set_active_frame_sub(frame, force_indicator, 0);
+}
+
+/* Set the active frame. */
+void
+set_active_frame_motion (rp_frame *frame, int force_indicator)
+{
+  set_active_frame_sub(frame, force_indicator, 1);
+}
+
+/* Switch the input focus to another frame, and therefore a different
+   window.
+
+   If force_indicator is true, show the current frame indicator
+   message even if we wouldn't otherwise.
+
+   If motion is true, the request is due to mouse movement, so do not
+   save the mouse position from the old window (we've already left it)
+   nor warp the mouse in the new window (the user is currently moving
+   the mouse). */
+void
+set_active_frame_sub (rp_frame *frame, int force_indicator, int motion)
 {
   rp_screen *old_s = current_screen();
   rp_screen *s = frames_screen (frame);
@@ -840,7 +862,22 @@ set_active_frame (rp_frame *frame, int force_indicator)
     }
 
   /* Make the switch */
-  give_window_focus (win, old_win);
+  give_window_focus (win, old_win, motion);
+  if(!win && !motion && defaults.focus_policy != FOCUS_MANUAL)
+    {
+      /* If the focus change is not being caused by mouse movement and
+         focus policy is not manual (so focus changes can occur by
+         mouse movmeent), and if we are moving to an empty frame, then
+         warp the mouse to the empty frame in order to avoid the focus
+         being snapped back by the mouse still being in the old
+         frame. */
+      PRINT_DEBUG(("Empty frame: warping pointer\n"));
+      int ret = XWarpPointer (dpy, None, current_screen()->root,
+                              0, 0, 0, 0, frame->x + frame->width / 2, frame->y + frame->height / 2);
+      if(BadWindow == ret)
+        PRINT_DEBUG(("BadWindow on XWarpPointer().\n"));
+    }
+
   update_last_access (frame);
   s->current_frame = frame->number;
 
@@ -1085,6 +1122,39 @@ find_frame_number (int num)
             return cur;
         }
     }
+  return NULL;
+}
 
+rp_frame *
+find_frame_by_coordinates (Window root, int x, int y)
+{
+  /* This is inefficient.
+
+     It would be better to keep an indexed structure of rectangles so
+     that we can search in sub-linear time. That would require
+     maintaining that structure with every frame operation, which
+     incurs some overhead on all frame operations (at least, if
+     defaults.focus_policy > 0). So the subject should be thought
+     through and measured carefully.
+  */
+
+  int i;
+  rp_frame *cur;
+
+  for (i=0; i<num_screens; i++)
+    {
+      rp_screen *s = &screens[i];
+      list_for_each_entry (cur, &s->frames, node)
+        {
+          if(root == s->root)
+            {
+              if (cur->x <= x && cur->y <= y && x < cur->x + cur->width && y < cur->y + cur->height) {
+                return cur;
+              }
+            }
+        }
+    }
+
+  PRINT_DEBUG(("No frame matches coordinates.\n"));
   return NULL;
 }

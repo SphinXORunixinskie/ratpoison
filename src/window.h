@@ -30,7 +30,7 @@ void last_window (void);
 rp_window *find_window_in_list (Window w, struct list_head *list);
 rp_window *find_window (Window w);
 void maximize_current_window (void);
-void give_window_focus (rp_window *win, rp_window *last_win);
+void give_window_focus (rp_window *win, rp_window *last_win, int motion);
 void set_active_window (rp_window *win);
 void goto_window (rp_window *win);
 void set_current_window (rp_window *win);
@@ -55,6 +55,7 @@ void get_window_list (char *fmt, char *delim, struct sbuf *buffer,
                       int *mark_start, int *mark_end);
 void init_window_stuff (void);
 void free_window_stuff (void);
+void init_focus_policy(void);
 
 rp_frame *win_get_frame (rp_window *win);
 
